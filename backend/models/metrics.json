@@ -1,0 +1,23 @@
+{
+  "best_model": "XGBoost",
+  "results": [
+    {
+      "model": "Linear Regression",
+      "MAE": 10.23,
+      "RMSE": 14.92,
+      "R2": 0.915
+    },
+    {
+      "model": "Random Forest",
+      "MAE": 8.43,
+      "RMSE": 12.13,
+      "R2": 0.944
+    },
+    {
+      "model": "XGBoost",
+      "MAE": 7.83,
+      "RMSE": 11.24,
+      "R2": 0.952
+    }
+  ]
+}
