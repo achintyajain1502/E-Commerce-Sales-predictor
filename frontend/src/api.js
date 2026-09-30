@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API || "http://127.0.0.1:8000";
+const BASE = "https://e-commerce-sales-predictor-mdkq.onrender.com";
 
 async function call(path, options) {
   const res = await fetch(BASE + path, options);
