@@ -146,7 +146,8 @@ function Predict({ products }) {
               <div className={res.inventory.alert ? "alert" : "ok"}>
                 {res.inventory.alert
                   ? `Restock: you have ${res.inventory.current_stock} units but a week of demand needs about ${res.inventory.recommended_stock}.`
-                  : `Stock is enough: ${res.inventory.current_stock} units covers the predicted week (need about ${res.inventory.recommended_stock}).`}
+                  : `Stock is enough: ${res.inventory.current_stock} units covers the predicted week.`} 
+                  {/* (need about ${res.inventory.recommended_stock}) */}
               </div>
             )}
           </>
