@@ -33,7 +33,7 @@ TARGET = "units_sold"
 
 def add_calendar(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    df["date"] = pd.to_datetime(df["date"])
+    df["date"] = pd.to_datetime(df["date"], dayfirst=True)
     df["day_of_week"] = df["date"].dt.dayofweek
     df["month"] = df["date"].dt.month
     df["week_of_year"] = df["date"].dt.isocalendar().week.astype(int)
@@ -59,7 +59,7 @@ def clean(df: pd.DataFrame) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Missing columns: {sorted(missing)}")
     df = df.drop_duplicates(subset=["date", "product_id"]).copy()
-    df["date"] = pd.to_datetime(df["date"])
+    df["date"] = pd.to_datetime(df["date"], dayfirst=True)
     for c in ["price", "discount", "marketing_spend", "units_sold"]:
         df[c] = df.groupby("product_id")[c].transform(lambda s: s.fillna(s.median()))
     return df[df["units_sold"] >= 0]

@@ -191,9 +191,9 @@ def predict(b: PredictIn):
     h = _hist(b.product_id)
 
     date = (
-        pd.Timestamp(b.date)
-        if b.date
-        else h.date.max() + timedelta(days=1)
+    pd.to_datetime(b.date, dayfirst=True)
+    if b.date
+    else h.date.max() + timedelta(days=1)
     )
 
     base_price = PRODUCTS[b.product_id][2]
@@ -279,11 +279,15 @@ def predict(b: PredictIn):
         "insights": insights,
     }
 
-    if b.current_stock is not None:
+    # ---------------------------------------------------------
+    # INVENTORY ANALYSIS
+    # ---------------------------------------------------------
 
-        need = round(
-            units * 7 * 1.1
-        )
+    need = round(
+        units * 7 * 1.1
+    )
+
+    if b.current_stock is not None:
 
         out["inventory"] = {
             "current_stock": b.current_stock,
@@ -291,7 +295,133 @@ def predict(b: PredictIn):
             "alert": b.current_stock < need,
         }
 
+    # ---------------------------------------------------------
+    # SALES RISK SCORE
+    # ---------------------------------------------------------
+
+    risk_score = 0
+    risk_reasons = []
+
+    # 1. Sales trend
+    if change < -20:
+        risk_score += 30
+        risk_reasons.append(
+            "Sales are declining significantly compared with last week."
+        )
+
+    elif change < -10:
+        risk_score += 20
+        risk_reasons.append(
+            "Sales are declining compared with last week."
+        )
+
+    elif change < 0:
+        risk_score += 10
+        risk_reasons.append(
+            "Sales are slightly below last week's level."
+        )
+
+    # 2. Inventory risk
+    if b.current_stock is not None:
+
+        if b.current_stock < need * 0.5:
+            risk_score += 25
+            risk_reasons.append(
+                "Current inventory is far below expected weekly demand."
+            )
+
+        elif b.current_stock < need:
+            risk_score += 15
+            risk_reasons.append(
+                "Current inventory may not cover expected weekly demand."
+            )
+
+    # 3. Low predicted demand
+    if units < a30 * 0.75:
+        risk_score += 15
+        risk_reasons.append(
+            "Predicted demand is significantly below the recent average."
+        )
+
+    # 4. Low marketing activity
+    if b.marketing_spend < 5000:
+        risk_score += 10
+        risk_reasons.append(
+            "Low marketing spend may reduce product demand."
+        )
+
+    # 5. No discount during declining sales
+    if b.discount == 0 and change < 0:
+        risk_score += 10
+        risk_reasons.append(
+            "Sales are declining while no discount is being offered."
+        )
+
+    # Keep score within 0-100
+    risk_score = min(risk_score, 100)
+
+    # ---------------------------------------------------------
+    # RISK LEVEL
+    # ---------------------------------------------------------
+
+    if risk_score <= 25:
+        risk_level = "Low"
+
+    elif risk_score <= 50:
+        risk_level = "Moderate"
+
+    elif risk_score <= 75:
+        risk_level = "High"
+
+    else:
+        risk_level = "Critical"
+
+    # ---------------------------------------------------------
+    # RECOMMENDATION
+    # ---------------------------------------------------------
+
+    if risk_level == "Low":
+
+        recommendation = (
+            "Sales outlook is healthy. "
+            "Continue monitoring current performance."
+        )
+
+    elif risk_level == "Moderate":
+
+        recommendation = (
+            "Monitor sales closely and consider improving "
+            "marketing or promotional activity."
+        )
+
+    elif risk_level == "High":
+
+        recommendation = (
+            "Take action to improve demand and review "
+            "inventory before the predicted period."
+        )
+
+    else:
+
+        recommendation = (
+            "Immediate action recommended. Review pricing, "
+            "marketing and inventory."
+        )
+
+    # ---------------------------------------------------------
+    # ADD SALES RISK TO RESPONSE
+    # ---------------------------------------------------------
+
+    out["sales_risk"] = {
+        "score": risk_score,
+        "level": risk_level,
+        "reasons": risk_reasons,
+        "recommendation": recommendation,
+    }
+
     return out
+
+
 
 
 # ---------------------------------------------------------

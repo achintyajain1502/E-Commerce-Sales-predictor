@@ -150,6 +150,47 @@ function Predict({ products }) {
                   {/* (need about ${res.inventory.recommended_stock}) */}
               </div>
             )}
+            {res.sales_risk && (
+  <div className={`risk-card risk-${res.sales_risk.level.toLowerCase()}`}>
+    <div className="risk-header">
+      <div>
+        <h3>Sales Risk Score</h3>
+        <p>Risk of sales underperformance</p>
+      </div>
+
+      <div className="risk-score">
+        {res.sales_risk.score}
+        <span>/100</span>
+      </div>
+    </div>
+
+    <div className="risk-level">
+      {res.sales_risk.level === "Low" && "🟢"}
+      {res.sales_risk.level === "Moderate" && "🟡"}
+      {res.sales_risk.level === "High" && "🟠"}
+      {res.sales_risk.level === "Critical" && "🔴"}
+
+      {" "}{res.sales_risk.level} Risk
+    </div>
+
+    {res.sales_risk.reasons?.length > 0 && (
+      <div className="risk-reasons">
+        <strong>Risk factors</strong>
+
+        <ul>
+          {res.sales_risk.reasons.map((reason, index) => (
+            <li key={index}>{reason}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <div className="risk-recommendation">
+      <strong>💡 Recommended action</strong>
+      <p>{res.sales_risk.recommendation}</p>
+    </div>
+  </div>
+)}
           </>
         )}
       </section>
